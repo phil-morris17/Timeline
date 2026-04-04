@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When They Lived Together — Whittington</title>
+<style>
+:root{
+  --bg:#f6f1e8; --paper:#fbf8f2; --ink:#2f2419; --muted:#6d6256; --line:#c8b9a4;
+  --dixon:#badb63; --clergy:#efb15f; --local:#8bd67a; --events:#6ea9df;
+  --shadow:0 10px 28px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+header{padding:20px 18px 14px;text-align:center;background:#e8dfd1;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:clamp(1.8rem,2vw + 1rem,3rem)}
+header p{margin:.35rem auto 0;color:var(--muted);max-width:900px}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,.9fr);gap:18px;padding:16px;max-width:1600px;margin:0 auto}
+@media (max-width:980px){main{grid-template-columns:1fr}}
+.panel,.chart-shell,.controls{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.controls{padding:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.controls input{flex:1 1 260px;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.legend{display:flex;gap:10px;flex-wrap:wrap}
+.legend span{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:.92rem}
+.swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart-shell{overflow:hidden}
+.chart-head{padding:12px 14px 0}
+.chart-head h2{margin:0;font-size:1.15rem}
+.chart-head p{margin:.25rem 0 0;color:var(--muted)}
+.viewport{overflow:auto;border-top:1px solid #e7dccb;margin-top:10px}
+svg{display:block;width:100%;min-width:1100px;background:linear-gradient(to bottom,rgba(255,255,255,.25),rgba(255,255,255,0))}
+.panel{padding:14px;position:sticky;top:14px}
+.panel h3{margin:.2rem 0;font-size:1.4rem}
+.small{color:var(--muted);font-size:.95rem}
+.meta{color:var(--muted);margin-bottom:12px}
+.bio{line-height:1.55}
+.section{margin-top:14px;padding-top:12px;border-top:1px solid #e7dccb}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.badge{background:#efe7dc;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:.9rem}
+.list{margin:8px 0 0;padding-left:1.1rem}
+.tick-label{fill:#6d6256;font-size:12px}
+.group-label{fill:var(--ink);font-size:15px;font-weight:600}
+.item-label{fill:var(--ink);font-size:13px;pointer-events:none}
+.item-years{fill:#5e5449;font-size:11px;pointer-events:none}
+.item-rect{stroke:rgba(60,45,30,.18);stroke-width:1;cursor:pointer;rx:8;ry:8}
+.item-rect.selected{stroke:#3d2a18;stroke-width:2}
+.event-line{stroke:#88a7c4;stroke-width:1.4}
+.event-dot{fill:var(--events);stroke:#fff;stroke-width:2;cursor:pointer}
+.event-label{fill:#476b8a;font-size:12px}
+.grid-line{stroke:#e7dccb;stroke-width:1}
+.footer-note{margin-top:12px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Whittington History Hub</h1>
+  <p>When They Lived Together: a clean single-file version with no CSV dependency.</p>
+</header>
+
+<main>
+  <section>
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search names or notes">
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--dixon)"></i>Dixon Family</span>
+        <span><i class="swatch" style="background:var(--clergy)"></i>Parish / Clergy</span>
+        <span><i class="swatch" style="background:var(--local)"></i>Local Figures</span>
+        <span><i class="swatch" style="background:var(--events)"></i>Events</span>
+      </div>
+    </div>
+    <div class="chart-shell">
+      <div class="chart-head">
+        <h2>Interactive overlap timeline</h2>
+        <p>Click a bar or event to read the notes in the panel.</p>
+      </div>
+      <div class="viewport">
+        <svg id="chart" viewBox="0 0 1280 920"></svg>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="small">Selected item</div>
+    <h3 id="title">Click a bar or event</h3>
+    <div id="meta" class="meta">The notes panel will update here.</div>
+    <div id="bio" class="bio">This version is self-contained, so you only need one file in GitHub: <strong>index.html</strong>.</div>
+
+    <div class="section">
+      <div class="small">Period tags</div>
+      <div id="badges" class="badges"></div>
+    </div>
+
+    <div class="section">
+      <div class="small">People active at the same time</div>
+      <ul id="related" class="list"></ul>
+      <div id="relatedEmpty" class="small">Choose a person to see contemporaries.</div>
+    </div>
+
+    <div class="footer-note">Built as a clean restart version for Whittington History Hub.</div>
+  </aside>
+</main>
+
+<script>
+const items = [{"id": "E01", "title": "Plotting Of Revolution", "start": 1688, "end": 1688, "category": "Events", "type": "Event", "notes": "The 1688 Revolution provides an early historical anchor point for the wider story of the area."}, {"id": "P01", "title": "Richard Dixon", "start": 1702, "end": 1727, "category": "Dixon Family", "type": "Person", "notes": "Early member of the Dixon family, establishing a local presence that would shape Whittington across several generations."}, {"id": "P02", "title": "Richard Dixon Jnr", "start": 1727, "end": 1736, "category": "Dixon Family", "type": "Person", "notes": "Continued the family’s local influence during a period of gradual parish development."}, {"id": "P03", "title": "William Dixon", "start": 1736, "end": 1743, "category": "Dixon Family", "type": "Person", "notes": "Part of the Dixon succession, maintaining continuity in landholding and local standing."}, {"id": "P04", "title": "Richard Dixon Jnr 2", "start": 1743, "end": 1769, "category": "Dixon Family", "type": "Person", "notes": "Represents the later phase of Dixon family influence, overlapping with the arrival of Dr Samuel Pegge."}, {"id": "P05", "title": "Dr Samuel Pegge", "start": 1751, "end": 1796, "category": "Parish / Clergy", "type": "Person", "notes": "Rector of Whittington and noted antiquarian. His work preserved important local history and coincided with the later Dixon period."}, {"id": "P06", "title": "Gilbert Dixon", "start": 1769, "end": 1777, "category": "Dixon Family", "type": "Person", "notes": "Associated with both local industry and administration, marking a transition from traditional landholding toward broader economic activity."}, {"id": "P07", "title": "John Dixon", "start": 1777, "end": 1816, "category": "Dixon Family", "type": "Person", "notes": "A key late figure in the Dixon line, bridging the eighteenth and nineteenth centuries and overlapping with emerging new parish leadership."}, {"id": "P08", "title": "William Beecher", "start": 1796, "end": 1798, "category": "Parish / Clergy", "type": "Person", "notes": "Held a short tenure during a transitional period in parish leadership."}, {"id": "P09", "title": "Sherard Beecher", "start": 1798, "end": 1812, "category": "Parish / Clergy", "type": "Person", "notes": "Continued the Beecher clerical presence, guiding the parish into the early nineteenth century."}, {"id": "P10", "title": "George Gordon (the Elder)", "start": 1812, "end": 1816, "category": "Parish / Clergy", "type": "Person", "notes": "Part of the clerical transition that followed the decline of the Dixon family’s dominance."}, {"id": "P11", "title": "George Gordon Jnr", "start": 1816, "end": 1872, "category": "Parish / Clergy", "type": "Person", "notes": "A long-serving clerical figure whose tenure spans major social and industrial change in Whittington."}, {"id": "P12", "title": "Frederick Swanwick", "start": 1837, "end": 1885, "category": "Local Figures", "type": "Person", "notes": "Engineer associated with the railway age, contributing to the wider industrial transformation influencing Whittington."}, {"id": "P13", "title": "Mary Swanwick", "start": 1841, "end": 1917, "category": "Local Figures", "type": "Person", "notes": "Writer and reformer, reflecting the intellectual and cultural life of the Victorian and Edwardian periods."}, {"id": "E02", "title": "New Parish Church Built", "start": 1863, "end": 1863, "category": "Events", "type": "Event", "notes": "Marks a major phase of Victorian expansion and investment in the parish."}, {"id": "P14", "title": "Joseph Syddall", "start": 1863, "end": 1920, "category": "Local Figures", "type": "Person", "notes": "Artist known for detailed works and local connections, contributing to Whittington’s cultural heritage."}, {"id": "P15", "title": "George William Botham", "start": 1872, "end": 1889, "category": "Parish / Clergy", "type": "Person", "notes": "Late Victorian parish figure whose years fall within a particularly active period of local overlap."}, {"id": "P16", "title": "Clement Clover Ward", "start": 1889, "end": 1891, "category": "Parish / Clergy", "type": "Person", "notes": "A short-serving parish figure during a transitional period before the 1895 church fire."}, {"id": "P17", "title": "George Owen Holt", "start": 1891, "end": 1896, "category": "Parish / Clergy", "type": "Person", "notes": "Active in the years immediately leading up to the destruction of the church by fire."}, {"id": "P18", "title": "John Tomlinson", "start": 1892, "end": 1898, "category": "Parish / Clergy", "type": "Person", "notes": "His years overlap the destruction of the old church and the rebuilding of its successor."}, {"id": "E03", "title": "Church Destroyed By Fire", "start": 1895, "end": 1895, "category": "Events", "type": "Event", "notes": "A defining moment in Whittington’s history, leading to rapid rebuilding."}, {"id": "P19", "title": "Maurice Deacon", "start": 1896, "end": 1907, "category": "Parish / Clergy", "type": "Person", "notes": "Rector during the rebuilding period after the 1895 fire, central to parish recovery."}, {"id": "E04", "title": "Present Church Built", "start": 1896, "end": 1896, "category": "Events", "type": "Event", "notes": "A symbol of resilience and renewal after the 1895 fire."}, {"id": "P20", "title": "George Ford", "start": 1898, "end": 1922, "category": "Parish / Clergy", "type": "Person", "notes": "Led the parish into the twentieth century, consolidating the rebuilt church and modern community life."}, {"id": "P21", "title": "Harry Brearley", "start": 1910, "end": 1920, "category": "Local Figures", "type": "Person", "notes": "Metallurgist and pioneer of stainless steel, representing the area’s wider industrial legacy."}];
+const persons = items.filter(d => d.type === "Person");
+const events = items.filter(d => d.type === "Event");
+const svg = document.getElementById("chart");
+const titleEl = document.getElementById("title");
+const metaEl = document.getElementById("meta");
+const bioEl = document.getElementById("bio");
+const searchEl = document.getElementById("search");
+const badgesEl = document.getElementById("badges");
+const relatedEl = document.getElementById("related");
+const relatedEmptyEl = document.getElementById("relatedEmpty");
+
+const colors = {
+  "Dixon Family":"var(--dixon)",
+  "Parish / Clergy":"var(--clergy)",
+  "Local Figures":"var(--local)",
+  "Events":"var(--events)"
+};
+
+const periods = [
+  {label:"Dixon–Pegge period", start:1751, end:1777},
+  {label:"Victorian transformation", start:1863, end:1896},
+  {label:"Fire & reconstruction", start:1895, end:1907}
+];
+
+function overlaps(a,b){
+  return a.start <= b.end && b.start <= a.end;
+}
+
+function el(name, attrs){
+  const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attrs || {}).forEach(([k,v]) => node.setAttribute(k,v));
+  svg.appendChild(node);
+  return node;
+}
+
+function getRelated(item){
+  if (!item || item.type !== "Person") return [];
+  return persons.filter(p => p.id !== item.id && overlaps(p, item)).sort((a,b) => a.start - b.start);
+}
+
+function setPanel(item){
+  badgesEl.innerHTML = "";
+  relatedEl.innerHTML = "";
+
+  if (!item){
+    titleEl.textContent = "Click a bar or event";
+    metaEl.textContent = "The notes panel will update here.";
+    bioEl.innerHTML = "This version is self-contained, so you only need one file in GitHub: <strong>index.html</strong>.";
+    relatedEmptyEl.style.display = "block";
+    return;
+  }
+
+  titleEl.textContent = item.title;
+  metaEl.textContent = (item.start === item.end ? item.start : item.start + "–" + item.end) + " • " + item.category + " • " + item.type;
+  bioEl.textContent = item.notes || "No notes available.";
+
+  periods.filter(p => item.start <= p.end && item.end >= p.start).forEach(p => {
+    const span = document.createElement("span");
+    span.className = "badge";
+    span.textContent = p.label;
+    badgesEl.appendChild(span);
+  });
+
+  const related = getRelated(item);
+  if (related.length){
+    relatedEmptyEl.style.display = "none";
+    related.forEach(r => {
+      const li = document.createElement("li");
+      li.textContent = r.title + " (" + r.start + "–" + r.end + ")";
+      relatedEl.appendChild(li);
+    });
+  } else {
+    relatedEmptyEl.style.display = "block";
+  }
+}
+
+function render(){
+  svg.innerHTML = "";
+  const term = searchEl.value.trim().toLowerCase();
+  const yearMin = 1680, yearMax = 1925, width = 1280, left = 130, right = 40, top = 96, bottom = 54;
+  const innerW = width - left - right;
+  const yearToX = y => left + ((y - yearMin) / (yearMax - yearMin)) * innerW;
+
+  const filteredPersons = persons.filter(d => (d.title + " " + d.notes).toLowerCase().includes(term));
+  const filteredEvents = events.filter(d => (d.title + " " + d.notes).toLowerCase().includes(term));
+
+  const categories = ["Dixon Family","Parish / Clergy","Local Figures"];
+  const rowH = 38, rowGap = 12, groupGap = 34;
+  const positions = new Map();
+  let y = top + 48;
+
+  categories.forEach(cat => {
+    const catItems = filteredPersons.filter(d => d.category === cat).sort((a,b) => a.start - b.start);
+    if (!catItems.length) return;
+    positions.set("group-"+cat, y);
+    catItems.forEach((d,i) => positions.set(d.id, y + 22 + i * (rowH + rowGap)));
+    y += 22 + catItems.length * (rowH + rowGap) + groupGap;
+  });
+
+  const chartHeight = Math.max(y + 70, 900);
+  svg.setAttribute("viewBox", "0 0 " + width + " " + chartHeight);
+
+  [1688,1700,1725,1750,1775,1800,1825,1850,1875,1895,1900,1920].forEach(year => {
+    const x = yearToX(year);
+    el("line", {x1:x,y1:top-18,x2:x,y2:chartHeight-bottom,class:"grid-line"});
+    const t = el("text", {x:x,y:top-28,"text-anchor":"middle",class:"tick-label"});
+    t.textContent = year;
+  });
+
+  categories.forEach(cat => {
+    const gy = positions.get("group-"+cat);
+    if (gy){
+      const t = el("text", {x:18,y:gy+8,class:"group-label"});
+      t.textContent = cat;
+    }
+  });
+
+  filteredPersons.forEach(d => {
+    const barY = positions.get(d.id);
+    const x = yearToX(d.start), w = Math.max(16, yearToX(d.end) - x);
+    const rect = el("rect", {x:x,y:barY,width:w,height:rowH,fill:colors[d.category],class:"item-rect"});
+    rect.addEventListener("click", () => setPanel(d));
+    const l = el("text", {x:x+8,y:barY+15,class:"item-label"});
+    l.textContent = d.title;
+    const yr = el("text", {x:x+8,y:barY+30,class:"item-years"});
+    yr.textContent = d.start + "–" + d.end;
+  });
+
+  filteredEvents.forEach((e,idx) => {
+    const x = yearToX(e.start);
+    el("line", {x1:x,y1:top-18,x2:x,y2:chartHeight-bottom+2,class:"event-line"});
+    const c = el("circle", {cx:x,cy:top-18,r:6,class:"event-dot"});
+    c.addEventListener("click", () => setPanel(e));
+    const tx = el("text", {x:x+8,y:top+idx*20,class:"event-label"});
+    tx.textContent = e.title + " (" + e.start + ")";
+  });
+}
+
+searchEl.addEventListener("input", render);
+render();
+setPanel(null);
+</script>
+</body>
+</html>
