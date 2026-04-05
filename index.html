@@ -3,6 +3,178 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whittington History Hub</title>
+
+<style>
+:root{
+  --bg:#f6f1e8; --paper:#fbf8f2; --ink:#2f2419; --muted:#6d6256; --line:#c8b9a4;
+  --dixon:#badb63; --clergy:#efb15f; --local:#8bd67a; --events:#6ea9df;
+}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif}
+header{text-align:center;padding:20px;background:#e8dfd1;border-bottom:1px solid var(--line)}
+main{display:grid;grid-template-columns:2fr 1fr;gap:20px;padding:20px}
+
+.box{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
+
+.item-rect{opacity:0.7;cursor:pointer}
+.item-rect.selected{stroke:#3d2a18;stroke-width:2;opacity:1}
+.item-rect.related{stroke:#000;stroke-width:2;opacity:1}
+
+.item-label{font-size:12px;pointer-events:none}
+.item-years{font-size:10px;fill:#555;pointer-events:none}
+.tick{font-size:11px;fill:#777}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Whittington History Hub</h1>
+<p>Interactive overlap timeline</p>
+</header>
+
+<main>
+
+<section class="box">
+<h3>Timeline</h3>
+<svg id="chart" viewBox="0 0 1200 650"></svg>
+</section>
+
+<aside class="box">
+<h3 id="title">Click a person</h3>
+<div id="meta"></div>
+<br>
+<div id="bio"></div>
+<br>
+<div id="overlaps"></div>
+</aside>
+
+</main>
+
+<script>
+
+// DATA (expand later)
+const data = [
+{ id:"1", title:"Richard Dixon", start:1702, end:1727, category:"Dixon Family", notes:"Early Dixon figure"},
+{ id:"2", title:"Richard Dixon Jnr", start:1727, end:1736, category:"Dixon Family"},
+{ id:"3", title:"William Dixon", start:1736, end:1743, category:"Dixon Family"},
+{ id:"4", title:"Richard Dixon Jnr 2", start:1743, end:1769, category:"Dixon Family"},
+{ id:"5", title:"Gilbert Dixon", start:1769, end:1777, category:"Dixon Family"},
+{ id:"6", title:"John Dixon", start:1777, end:1816, category:"Dixon Family"},
+{ id:"7", title:"Dr Samuel Pegge", start:1751, end:1796, category:"Parish / Clergy"}
+];
+
+// SETUP
+const svg = document.getElementById("chart");
+const title = document.getElementById("title");
+const meta = document.getElementById("meta");
+const bio = document.getElementById("bio");
+const overlapsBox = document.getElementById("overlaps");
+
+const yearMin = 1680, yearMax = 1850;
+const width = 1100, left = 100, right = 40;
+const inner = width - left - right;
+
+function yearToX(y){
+  return left + ((y - yearMin)/(yearMax-yearMin))*inner;
+}
+
+// DRAW GRID (years)
+for(let y=1700; y<=1850; y+=25){
+  const x = yearToX(y);
+
+  let line = document.createElementNS("http://www.w3.org/2000/svg","line");
+  line.setAttribute("x1",x);
+  line.setAttribute("x2",x);
+  line.setAttribute("y1",30);
+  line.setAttribute("y2",600);
+  line.setAttribute("stroke","#ddd");
+  svg.appendChild(line);
+
+  let text = document.createElementNS("http://www.w3.org/2000/svg","text");
+  text.setAttribute("x",x);
+  text.setAttribute("y",20);
+  text.setAttribute("text-anchor","middle");
+  text.setAttribute("class","tick");
+  text.textContent = y;
+  svg.appendChild(text);
+}
+
+// DRAW ITEMS
+let yPos = 60;
+const positions = {};
+
+data.forEach(d=>{
+  const x = yearToX(d.start);
+  const w = Math.max(20, yearToX(d.end)-x);
+
+  const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  rect.setAttribute("x",x);
+  rect.setAttribute("y",yPos);
+  rect.setAttribute("width",w);
+  rect.setAttribute("height",26);
+  rect.setAttribute("fill","var(--dixon)");
+  rect.setAttribute("class","item-rect");
+
+  svg.appendChild(rect);
+
+  const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+  label.setAttribute("x",x+6);
+  label.setAttribute("y",yPos+17);
+  label.textContent = d.title;
+  label.setAttribute("class","item-label");
+  svg.appendChild(label);
+
+  const years = document.createElementNS("http://www.w3.org/2000/svg","text");
+  years.setAttribute("x",x+6);
+  years.setAttribute("y",yPos+30);
+  years.textContent = d.start+"–"+d.end;
+  years.setAttribute("class","item-years");
+  svg.appendChild(years);
+
+  positions[d.id] = rect;
+
+  rect.addEventListener("click",()=>selectItem(d));
+
+  yPos += 60;
+});
+
+// OVERLAP ENGINE
+function selectItem(d){
+
+  document.querySelectorAll(".item-rect").forEach(r=>{
+    r.classList.remove("selected","related");
+  });
+
+  positions[d.id].classList.add("selected");
+
+  const overlaps = data.filter(o =>
+    o.id !== d.id &&
+    !(o.end < d.start || o.start > d.end)
+  );
+
+  overlaps.forEach(o=>{
+    positions[o.id].classList.add("related");
+  });
+
+  title.textContent = d.title;
+  meta.textContent = `${d.start} – ${d.end}`;
+  bio.textContent = d.notes || "No notes available.";
+
+  overlapsBox.innerHTML =
+    "<strong>Contemporaries ("+overlaps.length+")</strong><br><br>" +
+    overlaps.map(o=>`${o.title} (${o.start}-${o.end})`).join("<br>");
+
+}
+
+</script>
+
+</body>
+</html><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Whittington Timeline</title>
 
 <style>
