@@ -100,43 +100,78 @@ for(let y=1700; y<=1850; y+=25){
   svg.appendChild(text);
 }
 
-// DRAW ITEMS
-let yPos = 60;
+// DRAW ITEMS BY CATEGORY
 const positions = {};
+
+const categoryRows = {
+  "Dixon Family": 60,
+  "Parish / Clergy": 240,
+  "Local Figures": 420,
+  "Events": 520
+};
+
+const categoryCounts = {
+  "Dixon Family": 0,
+  "Parish / Clergy": 0,
+  "Local Figures": 0,
+  "Events": 0
+};
+
+function getFill(category){
+  if(category === "Dixon Family") return "var(--dixon)";
+  if(category === "Parish / Clergy") return "var(--clergy)";
+  if(category === "Local Figures") return "var(--local)";
+  if(category === "Events") return "var(--events)";
+  return "var(--dixon)";
+}
+
+// category labels on left
+Object.entries(categoryRows).forEach(([category, y]) => {
+  const catLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
+  catLabel.setAttribute("x", 20);
+  catLabel.setAttribute("y", y + 18);
+  catLabel.setAttribute("font-size", "16");
+  catLabel.setAttribute("font-weight", "bold");
+  catLabel.textContent = category;
+  svg.appendChild(catLabel);
+});
 
 data.forEach(d=>{
   const x = yearToX(d.start);
   const w = Math.max(20, yearToX(d.end)-x);
 
+  const rowBase = categoryRows[d.category] || 60;
+  const offset = categoryCounts[d.category] * 50;
+  const yPos = rowBase + offset;
+
   const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  rect.setAttribute("x",x);
-  rect.setAttribute("y",yPos);
-  rect.setAttribute("width",w);
-  rect.setAttribute("height",26);
-  rect.setAttribute("fill","var(--dixon)");
-  rect.setAttribute("class","item-rect");
+  rect.setAttribute("x", x);
+  rect.setAttribute("y", yPos);
+  rect.setAttribute("width", w);
+  rect.setAttribute("height", 26);
+  rect.setAttribute("fill", getFill(d.category));
+  rect.setAttribute("class", "item-rect");
 
   svg.appendChild(rect);
 
   const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-  label.setAttribute("x",x+6);
-  label.setAttribute("y",yPos+17);
+  label.setAttribute("x", x + 6);
+  label.setAttribute("y", yPos + 17);
   label.textContent = d.title;
-  label.setAttribute("class","item-label");
+  label.setAttribute("class", "item-label");
   svg.appendChild(label);
 
   const years = document.createElementNS("http://www.w3.org/2000/svg","text");
-  years.setAttribute("x",x+6);
-  years.setAttribute("y",yPos+30);
-  years.textContent = d.start+"–"+d.end;
-  years.setAttribute("class","item-years");
+  years.setAttribute("x", x + 6);
+  years.setAttribute("y", yPos + 30);
+  years.textContent = d.start + "–" + d.end;
+  years.setAttribute("class", "item-years");
   svg.appendChild(years);
 
   positions[d.id] = rect;
+  rect.addEventListener("click", () => selectItem(d));
 
-  rect.addEventListener("click",()=>selectItem(d));
-
-  yPos += 60;
+  categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
 });
 
 // OVERLAP ENGINE
