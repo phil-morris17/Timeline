@@ -1,421 +1,235 @@
+
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Whittington History Hub</title>
-
 <style>
 :root{
-  --bg:#f6f1e8; --paper:#fbf8f2; --ink:#2f2419; --muted:#6d6256; --line:#c8b9a4;
-  --dixon:#badb63; --clergy:#efb15f; --local:#8bd67a; --events:#6ea9df;
+  --bg:#f6f1e8;
+  --paper:#fbf8f2;
+  --ink:#2f2419;
+  --muted:#6d6256;
+  --line:#c8b9a4;
+  --bar:#b9d56a;
+  --bar-selected:#93b64b;
+  --bar-related:#d8e7a6;
 }
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif}
-header{text-align:center;padding:20px;background:#e8dfd1;border-bottom:1px solid var(--line)}
-main{display:grid;grid-template-columns:2fr 1fr;gap:20px;padding:20px}
-
-.box{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
-
-.item-rect{opacity:0.7;cursor:pointer}
-.item-rect.selected{stroke:#3d2a18;stroke-width:2;opacity:1}
-.item-rect.related{stroke:#000;stroke-width:2;opacity:1}
-
-.item-label{font-size:12px;pointer-events:none}
-.item-years{font-size:10px;fill:#555;pointer-events:none}
-.tick{font-size:11px;fill:#777}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Georgia,serif;
+}
+header{
+  text-align:center;
+  padding:20px;
+  background:#e8dfd1;
+  border-bottom:1px solid var(--line);
+}
+main{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+  padding:20px;
+}
+.box{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+}
+svg{
+  width:100%;
+  height:auto;
+}
+.tick{
+  font-size:11px;
+  fill:#777;
+}
+.item-rect{
+  fill:var(--bar);
+  stroke:none;
+  cursor:pointer;
+}
+.item-rect.selected{
+  fill:var(--bar-selected);
+  stroke:#2f2419;
+  stroke-width:2;
+}
+.item-rect.related{
+  fill:var(--bar-related);
+  stroke:#7a6a4f;
+  stroke-width:1.5;
+}
+.item-label{
+  font-size:12px;
+  pointer-events:none;
+}
+.item-years{
+  font-size:10px;
+  fill:#555;
+  pointer-events:none;
+}
+#meta{
+  margin:10px 0;
+  color:var(--muted);
+}
+#bio{
+  line-height:1.5;
+}
+#overlaps{
+  margin-top:18px;
+}
+@media (max-width:900px){
+  main{grid-template-columns:1fr;}
+}
 </style>
 </head>
-
 <body>
 
 <header>
-<h1>Whittington History Hub</h1>
-<p>Interactive overlap timeline</p>
+  <h1>Whittington History Hub</h1>
+  <p>Simple interactive overlap timeline</p>
 </header>
 
 <main>
+  <section class="box">
+    <h2>Timeline</h2>
+    <svg id="chart" viewBox="0 0 1200 620"></svg>
+  </section>
 
-<section class="box">
-<h3>Timeline</h3>
-<svg id="chart" viewBox="0 0 1200 650"></svg>
-</section>
-
-<aside class="box">
-<h3 id="title">Click a person</h3>
-<div id="meta"></div>
-<br>
-<div id="bio"></div>
-<br>
-<div id="overlaps"></div>
-</aside>
-
+  <aside class="box">
+    <h2 id="title">Click a person</h2>
+    <div id="meta"></div>
+    <div id="bio">Select a bar to show notes.</div>
+    <div id="overlaps"></div>
+  </aside>
 </main>
 
 <script>
-
-// DATA (expand later)
 const data = [
-  { id:"1", title:"Richard Dixon", start:1702, end:1727, category:"Dixon Family", notes:"Early Dixon figure linked to the family’s growing local presence in Whittington."},
-  { id:"2", title:"Richard Dixon Jnr", start:1727, end:1736, category:"Dixon Family", notes:"Continued the Dixon family presence in the parish during the early eighteenth century."},
-  { id:"3", title:"William Dixon", start:1736, end:1743, category:"Dixon Family", notes:"Part of the continuing Dixon succession in Whittington."},
-  { id:"4", title:"Richard Dixon Jnr 2", start:1743, end:1769, category:"Dixon Family", notes:"Represents the later eighteenth-century phase of Dixon family influence."},
-  { id:"5", title:"Gilbert Dixon", start:1769, end:1777, category:"Dixon Family", notes:"A late Dixon family figure bridging older local influence and changing economic conditions."},
-  { id:"6", title:"John Dixon", start:1777, end:1816, category:"Dixon Family", notes:"A key late figure in the Dixon line whose years overlap major parish transition."},
-  { id:"7", title:"Dr Samuel Pegge", start:1751, end:1796, category:"Parish / Clergy", notes:"Rector of Whittington and noted antiquarian whose work preserved important local historical detail."}
-  const data = [
-  { id:"1", ... },
-  { id:"2", ... },
-{
-  id:"L1",
-  title:"Frederick Swanwick",
-  start:1800,
-  end:1865,
-  category:"Local Figures",
-  notes:"Engineer associated with George Stephenson and early railways."
-},
-{
-  id:"E1",
-  title:"Glorious Revolution",
-  start:1688,
-  end:1688,
-  category:"Events",
-  notes:"Key national event linked to meetings at Revolution House."
-}
-  // add new ones here
-  { id:"8", title:"Frederick Swanwick", start:1837, end:1885, category:"Local Figures", notes:"Engineer linked to railway development."},
-  { id:"E1", title:"Glorious Revolution", start:1688, end:1688, category:"Events", notes:"Key national event tied to Revolution House."}
+  { id:"1", title:"Richard Dixon", start:1702, end:1727, notes:"Early Dixon figure linked to the family’s growing local presence in Whittington."},
+  { id:"2", title:"Richard Dixon Jnr", start:1727, end:1736, notes:"Continued the Dixon family presence in the parish during the early eighteenth century."},
+  { id:"3", title:"William Dixon", start:1736, end:1743, notes:"Part of the continuing Dixon succession in Whittington."},
+  { id:"4", title:"Richard Dixon Jnr 2", start:1743, end:1769, notes:"Represents the later eighteenth-century phase of Dixon family influence."},
+  { id:"5", title:"Gilbert Dixon", start:1769, end:1777, notes:"A late Dixon family figure bridging older local influence and changing economic conditions."},
+  { id:"6", title:"John Dixon", start:1777, end:1816, notes:"A key late figure in the Dixon line whose years overlap major parish transition."},
+  { id:"7", title:"Dr Samuel Pegge", start:1751, end:1796, notes:"Rector of Whittington and noted antiquarian whose work preserved important local historical detail."}
 ];
 
-// SETUP
 const svg = document.getElementById("chart");
-const title = document.getElementById("title");
-const meta = document.getElementById("meta");
-const bio = document.getElementById("bio");
-const overlapsBox = document.getElementById("overlaps");
+const titleEl = document.getElementById("title");
+const metaEl = document.getElementById("meta");
+const bioEl = document.getElementById("bio");
+const overlapsEl = document.getElementById("overlaps");
 
-const yearMin = 1680, yearMax = 1850;
-const width = 1100, left = 100, right = 40;
-const inner = width - left - right;
+const yearMin = 1680;
+const yearMax = 1850;
+const left = 120;
+const right = 40;
+const top = 50;
+const rowGap = 65;
+const barHeight = 24;
+const innerWidth = 1200 - left - right;
 
 function yearToX(y){
-  return left + ((y - yearMin)/(yearMax-yearMin))*inner;
+  return left + ((y - yearMin) / (yearMax - yearMin)) * innerWidth;
 }
 
-// DRAW GRID (years)
-for(let y=1700; y<=1850; y+=25){
-  const x = yearToX(y);
-
-  let line = document.createElementNS("http://www.w3.org/2000/svg","line");
-  line.setAttribute("x1",x);
-  line.setAttribute("x2",x);
-  line.setAttribute("y1",30);
-  line.setAttribute("y2",600);
-  line.setAttribute("stroke","#ddd");
-  svg.appendChild(line);
-
-  let text = document.createElementNS("http://www.w3.org/2000/svg","text");
-  text.setAttribute("x",x);
-  text.setAttribute("y",20);
-  text.setAttribute("text-anchor","middle");
-  text.setAttribute("class","tick");
-  text.textContent = y;
-  svg.appendChild(text);
+function overlaps(a, b){
+  return !(a.end < b.start || a.start > b.end);
 }
 
-// DRAW ITEMS BY CATEGORY
-const positions = {};
+function drawTicks(){
+  for(let y = 1700; y <= 1850; y += 25){
+    const x = yearToX(y);
 
-const categoryRows = {
-  "Dixon Family": 60,
-  "Parish / Clergy": 240,
-  "Local Figures": 420,
-  "Events": 520
-};
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", x);
+    line.setAttribute("x2", x);
+    line.setAttribute("y1", 30);
+    line.setAttribute("y2", 580);
+    line.setAttribute("stroke", "#ddd");
+    svg.appendChild(line);
 
-const categoryCounts = {
-  "Dixon Family": 0,
-  "Parish / Clergy": 0,
-  "Local Figures": 0,
-  "Events": 0
-};
-
-function getFill(category){
-  if(category === "Dixon Family") return "var(--dixon)";
-  if(category === "Parish / Clergy") return "var(--clergy)";
-  if(category === "Local Figures") return "var(--local)";
-  if(category === "Events") return "var(--events)";
-  return "var(--dixon)";
+    const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", 20);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("class", "tick");
+    text.textContent = y;
+    svg.appendChild(text);
+  }
 }
-// category labels on left
-Object.entries(categoryRows).forEach(([category, y]) => {
-  const catLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
-  catLabel.setAttribute("x", 20);
-  catLabel.setAttribute("y", y + 18);
-  catLabel.setAttribute("class", "group-label");
-  catLabel.textContent = category;
-  svg.appendChild(catLabel);
-});
 
-// draw items into their category rows
-data.forEach(d=>{
-  const x = yearToX(d.start);
-  const w = Math.max(20, yearToX(d.end)-x);
+const rectMap = new Map();
 
-  const rowBase = categoryRows[d.category] || 60;
-  const offset = categoryCounts[d.category] * 50;
-  const yPos = rowBase + offset;
+function drawBars(){
+  let yPos = top;
 
-  const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  rect.setAttribute("x", x);
-  rect.setAttribute("y", yPos);
-  rect.setAttribute("width", w);
-  rect.setAttribute("height", 26);
-  rect.setAttribute("fill", getFill(d.category));
-  rect.setAttribute("class", "item-rect");
+  data.forEach(d => {
+    const x = yearToX(d.start);
+    const w = Math.max(20, yearToX(d.end) - x);
 
-  svg.appendChild(rect);
+    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x", x);
+    rect.setAttribute("y", yPos);
+    rect.setAttribute("width", w);
+    rect.setAttribute("height", barHeight);
+    rect.setAttribute("class", "item-rect");
+    svg.appendChild(rect);
 
-  const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-  label.setAttribute("x", x + 6);
-  label.setAttribute("y", yPos + 17);
-  label.setAttribute("class", "item-label");
-  label.textContent = d.title;
-  svg.appendChild(label);
+    const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+    label.setAttribute("x", x + 6);
+    label.setAttribute("y", yPos + 16);
+    label.setAttribute("class", "item-label");
+    label.textContent = d.title;
+    svg.appendChild(label);
 
-  const years = document.createElementNS("http://www.w3.org/2000/svg","text");
-  years.setAttribute("x", x + 6);
-  years.setAttribute("y", yPos + 30);
-  years.setAttribute("class", "item-years");
-  years.textContent = d.start + "–" + d.end;
-  svg.appendChild(years);
+    const years = document.createElementNS("http://www.w3.org/2000/svg","text");
+    years.setAttribute("x", x + 6);
+    years.setAttribute("y", yPos + 30);
+    years.setAttribute("class", "item-years");
+    years.textContent = d.start + "–" + d.end;
+    svg.appendChild(years);
 
-  positions[d.id] = rect;
-  rect.addEventListener("click",()=>selectItem(d));
+    rect.addEventListener("click", () => selectPerson(d));
+    rectMap.set(d.id, rect);
 
-  categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
-});
-// category labels on left
-Object.entries(categoryRows).forEach(([category, y]) => {
-  const catLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
-  catLabel.setAttribute("x", 20);
-  catLabel.setAttribute("y", y + 18);
-  catLabel.setAttribute("font-size", "16");
-  catLabel.setAttribute("font-weight", "bold");
-  catLabel.textContent = category;
-  svg.appendChild(catLabel);
-});
+    yPos += rowGap;
+  });
+}
 
-data.forEach(d=>{
-  const x = yearToX(d.start);
-  const w = Math.max(20, yearToX(d.end)-x);
+function selectPerson(d){
+  rectMap.forEach(r => r.classList.remove("selected","related"));
 
-  const rowBase = categoryRows[d.category] || 60;
-  const offset = categoryCounts[d.category] * 50;
-  const yPos = rowBase + offset;
+  const selectedRect = rectMap.get(d.id);
+  if(selectedRect) selectedRect.classList.add("selected");
 
-  const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  rect.setAttribute("x", x);
-  rect.setAttribute("y", yPos);
-  rect.setAttribute("width", w);
-  rect.setAttribute("height", 26);
-  rect.setAttribute("fill", getFill(d.category));
-  rect.setAttribute("class", "item-rect");
+  const contemporaries = data.filter(other => other.id !== d.id && overlaps(d, other));
 
-  svg.appendChild(rect);
-
-  const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-  label.setAttribute("x", x + 6);
-  label.setAttribute("y", yPos + 17);
-  label.textContent = d.title;
-  label.setAttribute("class", "item-label");
-  svg.appendChild(label);
-
-  const years = document.createElementNS("http://www.w3.org/2000/svg","text");
-  years.setAttribute("x", x + 6);
-  years.setAttribute("y", yPos + 30);
-  years.textContent = d.start + "–" + d.end;
-  years.setAttribute("class", "item-years");
-  svg.appendChild(years);
-
-  positions[d.id] = rect;
-  rect.addEventListener("click", () => selectItem(d));
-
-  categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
-});
-
-// OVERLAP ENGINE
-function selectItem(d){
-
-  document.querySelectorAll(".item-rect").forEach(r=>{
-    r.classList.remove("selected","related");
+  contemporaries.forEach(other => {
+    const r = rectMap.get(other.id);
+    if(r) r.classList.add("related");
   });
 
-  positions[d.id].classList.add("selected");
+  titleEl.textContent = d.title;
+  metaEl.textContent = d.start + "–" + d.end;
+  bioEl.textContent = d.notes || "No notes available.";
 
-  const overlaps = data.filter(o =>
-    o.id !== d.id &&
-    !(o.end < d.start || o.start > d.end)
-  );
-
-  overlaps.forEach(o=>{
-    positions[o.id].classList.add("related");
-  });
-
-  title.textContent = d.title;
-  meta.textContent = `${d.start} – ${d.end}`;
-  bio.textContent = d.notes || "No notes available.";
-
-  overlapsBox.innerHTML =
-    "<strong>Contemporaries ("+overlaps.length+")</strong><br><br>" +
-    overlaps.map(o=>`${o.title} (${o.start}-${o.end})`).join("<br>");
-
+  if(contemporaries.length){
+    overlapsEl.innerHTML =
+      "<strong>Contemporaries (" + contemporaries.length + ")</strong><br><br>" +
+      contemporaries.map(c => c.title + " (" + c.start + "–" + c.end + ")").join("<br>");
+  } else {
+    overlapsEl.innerHTML = "<strong>Contemporaries (0)</strong>";
+  }
 }
 
-</script>
-
-</body>
-</html><!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Whittington Timeline</title>
-
-<style>
-:root{
-  --bg:#f6f1e8; --paper:#fbf8f2; --ink:#2f2419; --muted:#6d6256; --line:#c8b9a4;
-  --dixon:#badb63; --clergy:#efb15f; --local:#8bd67a; --events:#6ea9df;
-}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif}
-header{text-align:center;padding:20px;background:#e8dfd1;border-bottom:1px solid var(--line)}
-main{display:grid;grid-template-columns:2fr 1fr;gap:20px;padding:20px}
-
-.box{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}
-
-.item-rect{opacity:0.7;cursor:pointer}
-.item-rect.selected{stroke:#3d2a18;stroke-width:2;opacity:1}
-.item-rect.related{stroke:#000;stroke-width:2;opacity:1}
-.item-label{font-size:12px}
-.item-years{font-size:10px;fill:#555}
-</style>
-</head>
-
-<body>
-
-<header>
-<h1>Whittington History Hub</h1>
-<p>Interactive overlap timeline</p>
-</header>
-
-<main>
-
-<section class="box">
-<h3>Timeline</h3>
-<svg id="chart" viewBox="0 0 1200 600"></svg>
-</section>
-
-<aside class="box">
-<h3 id="title">Click a person</h3>
-<div id="meta"></div>
-<div id="bio"></div>
-<div id="overlaps"></div>
-</aside>
-
-</main>
-
-<script>
-
-// SAMPLE DATA (expand this)
-const data = [
-{ id:"1", title:"Richard Dixon", start:1702, end:1727, category:"Dixon Family", notes:"Early Dixon figure"},
-{ id:"2", title:"Richard Dixon Jnr", start:1727, end:1736, category:"Dixon Family"},
-{ id:"3", title:"William Dixon", start:1736, end:1743, category:"Dixon Family"},
-{ id:"4", title:"Richard Dixon Jnr 2", start:1743, end:1769, category:"Dixon Family"},
-{ id:"5", title:"Gilbert Dixon", start:1769, end:1777, category:"Dixon Family"},
-{ id:"6", title:"John Dixon", start:1777, end:1816, category:"Dixon Family"},
-{ id:"7", title:"Dr Samuel Pegge", start:1751, end:1796, category:"Parish / Clergy"}
-];
-
-// setup
-const svg = document.getElementById("chart");
-const title = document.getElementById("title");
-const meta = document.getElementById("meta");
-const bio = document.getElementById("bio");
-const overlapsBox = document.getElementById("overlaps");
-
-const yearMin = 1680, yearMax = 1850;
-const width = 1100, left = 80, right = 40;
-const inner = width - left - right;
-
-function yearToX(y){
-  return left + ((y - yearMin)/(yearMax-yearMin))*inner;
-}
-
-// draw
-let y = 40;
-const positions = {};
-
-data.forEach(d=>{
-  const x = yearToX(d.start);
-  const w = yearToX(d.end) - x;
-
-  const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  rect.setAttribute("x",x);
-  rect.setAttribute("y",y);
-  rect.setAttribute("width",w);
-  rect.setAttribute("height",20);
-  rect.setAttribute("fill","var(--dixon)");
-  rect.setAttribute("class","item-rect");
-
-  svg.appendChild(rect);
-
-  const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-  label.setAttribute("x",x+5);
-  label.setAttribute("y",y+14);
-  label.textContent = d.title;
-  label.setAttribute("class","item-label");
-  svg.appendChild(label);
-
-  positions[d.id] = rect;
-
-  rect.addEventListener("click",()=>{
-    selectItem(d);
-  });
-
-  y += 40;
-});
-
-// NEW OVERLAP LOGIC
-function selectItem(d){
-
-  // clear styles
-  document.querySelectorAll(".item-rect").forEach(r=>{
-    r.classList.remove("selected","related");
-  });
-
-  const selectedRect = positions[d.id];
-  selectedRect.classList.add("selected");
-
-  // find overlaps
-  const overlaps = data.filter(o =>
-    o.id !== d.id &&
-    !(o.end < d.start || o.start > d.end)
-  );
-
-  overlaps.forEach(o=>{
-    positions[o.id].classList.add("related");
-  });
-
-  // update panel
-  title.textContent = d.title;
-  meta.textContent = `${d.start} – ${d.end}`;
-  bio.textContent = d.notes || "No notes available.";
-
-  overlapsBox.innerHTML = "<h4>Contemporaries</h4>" +
-    overlaps.map(o=>`${o.title} (${o.start}-${o.end})`).join("<br>");
-
-}
-
+drawTicks();
+drawBars();
 </script>
 
 </body>
