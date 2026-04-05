@@ -107,7 +107,7 @@ loadCSV("whittington_timeline_autoload_dataset.csv").then(items=>{
     rect.addEventListener("click",()=>{
       title.textContent=d.title;
       meta.textContent=d.start+"–"+d.end+" • "+d.category+" • "+d.type;
-      bio.textContent=d.bio || "";
+      bio.textContent=d.bio || "No Notes available";
       svg.querySelectorAll(".item-rect").forEach(r=>r.classList.remove("selected"));
       rect.classList.add("selected");
     });
