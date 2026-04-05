@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -16,11 +15,12 @@
   --bar-selected:#93b64b;
   --bar-related:#d8e7a6;
 }
+*{box-sizing:border-box}
 body{
   margin:0;
   background:var(--bg);
   color:var(--ink);
-  font-family:Georgia,serif;
+  font-family:Georgia, serif;
 }
 header{
   text-align:center;
@@ -28,6 +28,8 @@ header{
   background:#e8dfd1;
   border-bottom:1px solid var(--line);
 }
+header h1{margin:0}
+header p{margin:.5rem 0 0}
 main{
   display:grid;
   grid-template-columns:2fr 1fr;
@@ -43,6 +45,7 @@ main{
 svg{
   width:100%;
   height:auto;
+  display:block;
 }
 .tick{
   font-size:11px;
@@ -97,7 +100,7 @@ svg{
 <main>
   <section class="box">
     <h2>Timeline</h2>
-    <svg id="chart" viewBox="0 0 1200 620"></svg>
+    <svg id="chart" viewBox="0 0 1200 620" aria-label="Timeline chart"></svg>
   </section>
 
   <aside class="box">
@@ -107,18 +110,58 @@ svg{
     <div id="overlaps"></div>
   </aside>
 </main>
+
 <script>
-
-alert("JS running");
-
 const data = [
-  { id:"1", title:"Richard Dixon", start:1702, end:1727, notes:"Early Dixon figure linked to the family’s growing local presence in Whittington."},
-  { id:"2", title:"Richard Dixon Jnr", start:1727, end:1736, notes:"Continued the Dixon family presence in the parish during the early eighteenth century."},
-  { id:"3", title:"William Dixon", start:1736, end:1743, notes:"Part of the continuing Dixon succession in Whittington."},
-  { id:"4", title:"Richard Dixon Jnr 2", start:1743, end:1769, notes:"Represents the later eighteenth-century phase of Dixon family influence."},
-  { id:"5", title:"Gilbert Dixon", start:1769, end:1777, notes:"A late Dixon family figure bridging older local influence and changing economic conditions."},
-  { id:"6", title:"John Dixon", start:1777, end:1816, notes:"A key late figure in the Dixon line whose years overlap major parish transition."},
-  { id:"7", title:"Dr Samuel Pegge", start:1751, end:1796, notes:"Rector of Whittington and noted antiquarian whose work preserved important local historical detail."}
+  {
+    id: "1",
+    title: "Richard Dixon",
+    start: 1702,
+    end: 1727,
+    notes: "Early Dixon figure linked to the family’s growing local presence in Whittington."
+  },
+  {
+    id: "2",
+    title: "Richard Dixon Jnr",
+    start: 1727,
+    end: 1736,
+    notes: "Continued the Dixon family presence in the parish during the early eighteenth century."
+  },
+  {
+    id: "3",
+    title: "William Dixon",
+    start: 1736,
+    end: 1743,
+    notes: "Part of the continuing Dixon succession in Whittington."
+  },
+  {
+    id: "4",
+    title: "Richard Dixon Jnr 2",
+    start: 1743,
+    end: 1769,
+    notes: "Represents the later eighteenth-century phase of Dixon family influence."
+  },
+  {
+    id: "5",
+    title: "Gilbert Dixon",
+    start: 1769,
+    end: 1777,
+    notes: "A late Dixon family figure bridging older local influence and changing economic conditions."
+  },
+  {
+    id: "6",
+    title: "John Dixon",
+    start: 1777,
+    end: 1816,
+    notes: "A key late figure in the Dixon line whose years overlap major parish transition."
+  },
+  {
+    id: "7",
+    title: "Dr Samuel Pegge",
+    start: 1751,
+    end: 1796,
+    notes: "Rector of Whittington and noted antiquarian whose work preserved important local historical detail."
+  }
 ];
 
 const svg = document.getElementById("chart");
@@ -136,19 +179,23 @@ const rowGap = 65;
 const barHeight = 24;
 const innerWidth = 1200 - left - right;
 
-function yearToX(y){
-  return left + ((y - yearMin) / (yearMax - yearMin)) * innerWidth;
+function yearToX(year){
+  return left + ((year - yearMin) / (yearMax - yearMin)) * innerWidth;
 }
 
 function overlaps(a, b){
   return !(a.end < b.start || a.start > b.end);
 }
 
-function drawTicks(){
-  for(let y = 1700; y <= 1850; y += 25){
-    const x = yearToX(y);
+function createSvgEl(name){
+  return document.createElementNS("http://www.w3.org/2000/svg", name);
+}
 
-    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+function drawTicks(){
+  for(let year = 1700; year <= 1850; year += 25){
+    const x = yearToX(year);
+
+    const line = createSvgEl("line");
     line.setAttribute("x1", x);
     line.setAttribute("x2", x);
     line.setAttribute("y1", 30);
@@ -156,12 +203,12 @@ function drawTicks(){
     line.setAttribute("stroke", "#ddd");
     svg.appendChild(line);
 
-    const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+    const text = createSvgEl("text");
     text.setAttribute("x", x);
     text.setAttribute("y", 20);
     text.setAttribute("text-anchor", "middle");
     text.setAttribute("class", "tick");
-    text.textContent = y;
+    text.textContent = year;
     svg.appendChild(text);
   }
 }
@@ -171,11 +218,11 @@ const rectMap = new Map();
 function drawBars(){
   let yPos = top;
 
-  data.forEach(d => {
-    const x = yearToX(d.start);
-    const w = Math.max(20, yearToX(d.end) - x);
+  data.forEach(person => {
+    const x = yearToX(person.start);
+    const w = Math.max(20, yearToX(person.end) - x);
 
-    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    const rect = createSvgEl("rect");
     rect.setAttribute("x", x);
     rect.setAttribute("y", yPos);
     rect.setAttribute("width", w);
@@ -183,58 +230,61 @@ function drawBars(){
     rect.setAttribute("class", "item-rect");
     svg.appendChild(rect);
 
-    const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+    const label = createSvgEl("text");
     label.setAttribute("x", x + 6);
     label.setAttribute("y", yPos + 16);
     label.setAttribute("class", "item-label");
-    label.textContent = d.title;
+    label.textContent = person.title;
     svg.appendChild(label);
 
-    const years = document.createElementNS("http://www.w3.org/2000/svg","text");
+    const years = createSvgEl("text");
     years.setAttribute("x", x + 6);
     years.setAttribute("y", yPos + 30);
     years.setAttribute("class", "item-years");
-    years.textContent = d.start + "–" + d.end;
+    years.textContent = person.start + "–" + person.end;
     svg.appendChild(years);
 
-    rect.addEventListener("click", () => selectPerson(d));
-    rectMap.set(d.id, rect);
+    rect.addEventListener("click", () => selectPerson(person));
+    rectMap.set(person.id, rect);
 
     yPos += rowGap;
   });
 }
 
-function selectPerson(d){
-  rectMap.forEach(r => r.classList.remove("selected","related"));
+function selectPerson(person){
+  rectMap.forEach(rect => rect.classList.remove("selected", "related"));
 
-  const selectedRect = rectMap.get(d.id);
-  if(selectedRect) selectedRect.classList.add("selected");
+  const selectedRect = rectMap.get(person.id);
+  if(selectedRect){
+    selectedRect.classList.add("selected");
+  }
 
-  const contemporaries = data.filter(other => other.id !== d.id && overlaps(d, other));
+  const contemporaries = data.filter(other =>
+    other.id !== person.id && overlaps(person, other)
+  );
 
   contemporaries.forEach(other => {
-    const r = rectMap.get(other.id);
-    if(r) r.classList.add("related");
+    const rect = rectMap.get(other.id);
+    if(rect){
+      rect.classList.add("related");
+    }
   });
 
-  titleEl.textContent = d.title;
-  metaEl.textContent = d.start + "–" + d.end;
-  bioEl.textContent = d.notes || "No notes available.";
+  titleEl.textContent = person.title;
+  metaEl.textContent = person.start + "–" + person.end;
+  bioEl.textContent = person.notes || "No notes available.";
 
   if(contemporaries.length){
     overlapsEl.innerHTML =
       "<strong>Contemporaries (" + contemporaries.length + ")</strong><br><br>" +
-      contemporaries.map(c => c.title + " (" + c.start + "–" + c.end + ")").join("<br>");
+      contemporaries
+        .map(c => c.title + " (" + c.start + "–" + c.end + ")")
+        .join("<br>");
   } else {
     overlapsEl.innerHTML = "<strong>Contemporaries (0)</strong>";
   }
 }
-</main>
-<script>
-const data = [
-  ...
-  ];
-  
+
 drawTicks();
 drawBars();
 </script>
