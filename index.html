@@ -43,8 +43,12 @@ async function loadCSV(url){
   return lines.slice(1).map(line => {
     const values = parseCSVLine(line);
     const obj = {};
-    headers.forEach((h,i)=>obj[h]=values[i] ?? "");
-    obj.start = +obj.start; obj.end = +obj.end;
+    headers.forEach((h,i)=>{
+      const = h.trim().toLowerCase().repla
+      obj[key] = values[i] ?? "";
+    });
+    obj.start = +obj.start; 
+    obj.end = +obj.end;
     return obj;
   });
 }
