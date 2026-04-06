@@ -111,7 +111,7 @@ loadCSV("whittington_timeline_autoload_dataset.csv").then(items=>{
     rect.addEventListener("click",()=>{
       title.textContent=d.title;
       meta.textContent=d.start+"–"+d.end+" • "+d.category+" • "+d.type;
-      bio.textContent=d.notes || d.notes || "No Notes available";
+      bio.textContent=d.notes d.notes || "No Notes available";
       svg.querySelectorAll(".item-rect").forEach(r=>r.classList.remove("selected"));
       rect.classList.add("selected");
     });
@@ -125,7 +125,7 @@ loadCSV("whittington_timeline_autoload_dataset.csv").then(items=>{
     c.addEventListener("click",()=>{
       title.textContent=e.title;
       meta.textContent=e.start+" • "+e.category+" • "+e.type;
-      bio.textContent=e.notes || e.notes || "No notes available";
+      bio.textContent=e.notes e.notes || "No notes available";
     });
     const tx=el(svg,"text",{x:x+8,y:top+idx*20,fill:"#476b8a","font-size":"12"}); tx.textContent=e.title+" ("+e.start+")";
   });
