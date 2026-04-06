@@ -70,7 +70,7 @@ function el(svg,name,attrs){
   Object.entries(attrs||{}).forEach(([k,v])=>n.setAttribute(k,v));
   svg.appendChild(n); return n;
 }
-loadCSV("whittington_timeline_autoload_dataset.csv").then(items=>{
+loadCSV("whittington_timeline_autoload_dataset_v2.csv").then(items=>{
   const svg=document.getElementById("chart");
   const title=document.getElementById("title");
   const meta=document.getElementById("meta");
